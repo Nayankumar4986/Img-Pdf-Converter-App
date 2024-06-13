@@ -1,7 +1,6 @@
 # Image and PDF Converter Web App
 
-![License](https://github.com/Nayankumar4986/Img-Pdf-Converter-App)
-![Version](https://github.com/Nayankumar4986/Img-Pdf-Converter-App)
+
 
 This project is a versatile web application designed to convert images between PNG and JPG formats, as well as split PDF files. It leverages modern web technologies including Tailwind CSS for styling and the `pdf-lib` library for PDF manipulation.
 
