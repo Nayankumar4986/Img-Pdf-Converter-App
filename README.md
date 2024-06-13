@@ -56,7 +56,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) f
 ## Contact
 
 - GitHub: [@Nayankumar4986](https://github.com/Nayankumar4986 )
-- Email: your.email@example.com
+- Email: nayanK092@gmail.com
 
 ## Acknowledgements
 
