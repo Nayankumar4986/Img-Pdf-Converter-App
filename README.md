@@ -1,7 +1,7 @@
 # Image and PDF Converter Web App
 
-![License](https://img.shields.io/github/license/YourUsername/YourRepoName)
-![Version](https://img.shields.io/github/package-json/v/YourUsername/YourRepoName)
+![License](https://github.com/Nayankumar4986/Img-Pdf-Converter-App)
+![Version](https://github.com/Nayankumar4986/Img-Pdf-Converter-App)
 
 This project is a versatile web application designed to convert images between PNG and JPG formats, as well as split PDF files. It leverages modern web technologies including Tailwind CSS for styling and the `pdf-lib` library for PDF manipulation.
 
@@ -44,7 +44,7 @@ This project is a versatile web application designed to convert images between P
 
 ## Screenshots
 
-![Screenshot of the app interface](https://github.com/Nayankumar4986/Ima_or_Split-pdf-Converter-App/blob/main/1.png)
+![Screenshot of the app interface](https://github.com/Nayankumar4986/Img-Pdf-Converter-App/blob/main/1.png)
 
 ## Contributions
 
