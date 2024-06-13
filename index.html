@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="jszip.min.js"></script>
+    <title>Converter Web App</title>
+  </head>
+  <body>
+    <div class="container mx-auto bg-black text-white">
+      <div
+        class="flex flex-col justify-center gap-4 h-screen w-9/12 mx-auto md:w-4/12"
+      >
+        <h1 class="text-4xl text-center font-bold my-4">
+          Image and PDF Converter
+        </h1>
+        <p class="text-center">
+          This tool converts images between PNG and JPG formats and splits PDF
+          files.
+        </p>
+        <div class="flex justify-center gap-4 mb-4">
+          <label class="flex items-center">
+            <input
+              type="radio"
+              name="conversionType"
+              value="pngToJpg"
+              checked
+            />
+            <span class="ml-2">PNG to JPG</span>
+          </label>
+          <label class="flex items-center">
+            <input type="radio" name="conversionType" value="jpgToPng" />
+            <span class="ml-2">JPG to PNG</span>
+          </label>
+          <label class="flex items-center">
+            <input type="radio" name="conversionType" value="splitPdf" />
+            <span class="ml-2">Split PDF</span>
+          </label>
+        </div>
+        <label
+          for="file"
+          class="border-2 border-blue-500 px-20 py-20 rounded-lg shadow-sm tracking-wide cursor-pointer hover:shadow-lg hover:bg-blue-500 hover:text-white flex flex-col justify-center items-center"
+        >
+          <input
+            type="file"
+            id="file"
+            accept="image/*,application/pdf"
+            class="hidden"
+            multiple
+          />
+          <img
+            src="https://img.icons8.com/ios/50/000000/upload.png"
+            class="w-10 h-10 cursor-pointer"
+          />
+          <p class="text-center">Upload</p>
+        </label>
+        <div id="uploadStatus" class="hidden text-center mt-2"></div>
+        <button
+          id="convert"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Convert
+        </button>
+        <div id="loading" class="hidden text-center">Processing...</div>
+        <div id="download" class="flex flex-col items-center"></div>
+        <footer class="text-center my-2 border-t-2 border-gray-200 pt-4">
+          <p class="text-sm">
+            Made with ❤️ by
+            <a
+              href="https://github.com/Nayankumar4986"
+              class="font-semibold text-blue-400 hover:text-blue-600"
+            >
+              @Nayan-Kumar
+            </a>
+          </p>
+        </footer>
+      </div>
+    </div>
+
+    <script>
+      const fileInput = document.getElementById('file')
+      const convertButton = document.getElementById('convert')
+      const downloadSection = document.getElementById('download')
+      const loadingIndicator = document.getElementById('loading')
+      const uploadStatus = document.getElementById('uploadStatus')
+
+      const isValidFileType = (file, conversionType) => {
+        const validTypes = {
+          pngToJpg: 'image/png',
+          jpgToPng: 'image/jpeg',
+          splitPdf: 'application/pdf',
+        }
+
+        return file.type === validTypes[conversionType]
+      }
+
+      fileInput.addEventListener('change', () => {
+        const conversionType = document.querySelector(
+          'input[name="conversionType"]:checked',
+        ).value
+        let allValid = true
+        for (let i = 0; i < fileInput.files.length; i++) {
+          if (!isValidFileType(fileInput.files[i], conversionType)) {
+            allValid = false
+            break
+          }
+        }
+        if (fileInput.files.length > 0 && allValid) {
+          uploadStatus.textContent = 'Upload successful!'
+          uploadStatus.classList.remove('hidden')
+          uploadStatus.classList.add('text-green-500')
+        } else {
+          uploadStatus.textContent = 'Invalid file type. Please try again.'
+          uploadStatus.classList.remove('hidden')
+          uploadStatus.classList.add('text-red-500')
+          fileInput.value = '' // Reset the file input
+        }
+      })
+
+      convertButton.addEventListener('click', async () => {
+        const conversionType = document.querySelector(
+          'input[name="conversionType"]:checked',
+        ).value
+
+        if (fileInput.files.length === 0) {
+          alert('Please select a file')
+          return
+        }
+
+        loadingIndicator.classList.remove('hidden')
+        uploadStatus.classList.add('hidden')
+
+        const convertImage = (file, format) => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.readAsDataURL(file)
+            reader.onload = () => {
+              const img = new Image()
+              img.src = reader.result
+              img.onload = () => {
+                const canvas = document.createElement('canvas')
+                canvas.width = img.width
+                canvas.height = img.height
+                const ctx = canvas.getContext('2d')
+                ctx.drawImage(img, 0, 0)
+                const dataURL = canvas.toDataURL(`image/${format}`, 0.9)
+                resolve(dataURL)
+              }
+            }
+          })
+        }
+
+        const splitPdf = async (file) => {
+          const arrayBuffer = await file.arrayBuffer()
+          const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer)
+          const numPages = pdfDoc.getPageCount()
+          const urls = []
+          for (let i = 0; i < numPages; i++) {
+            const singlePageDoc = await PDFLib.PDFDocument.create()
+            const [copiedPage] = await singlePageDoc.copyPages(pdfDoc, [i])
+            singlePageDoc.addPage(copiedPage)
+            const pdfBytes = await singlePageDoc.save()
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+            urls.push(URL.createObjectURL(blob))
+          }
+          return urls
+        }
+
+        if (conversionType === 'splitPdf') {
+          splitPdf(fileInput.files[0]).then((pdfUrls) => {
+            downloadSection.innerHTML = ''
+            pdfUrls.forEach((pdfUrl, index) => {
+              downloadSection.innerHTML += `<a href="${pdfUrl}" download="Page_${
+                index + 1
+              }.pdf" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">Download Page ${
+                index + 1
+              }</a>`
+            })
+            downloadSection.classList.remove('hidden')
+            loadingIndicator.classList.add('hidden')
+          })
+        } else if (fileInput.files.length > 1) {
+          const zip = new JSZip()
+          const promises = []
+          for (let i = 0; i < fileInput.files.length; i++) {
+            const format = conversionType === 'pngToJpg' ? 'jpeg' : 'png'
+            const ext = conversionType === 'pngToJpg' ? 'jpg' : 'png'
+            promises.push(
+              convertImage(fileInput.files[i], format).then((dataURL) => {
+                const fileName = fileInput.files[i].name.replace(
+                  /\.(jpg|jpeg|png)$/i,
+                  `.${ext}`,
+                )
+                zip.file(fileName, dataURL.split(',')[1], { base64: true })
+              }),
+            )
+          }
+
+          Promise.all(promises).then(() => {
+            zip.generateAsync({ type: 'blob' }).then((content) => {
+              const zipName = fileInput.files[0].name.split('.')[0] + '.zip'
+              downloadSection.innerHTML = `<a href="${URL.createObjectURL(
+                content,
+              )}" download="${zipName}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Download All</a>`
+              downloadSection.classList.remove('hidden')
+              loadingIndicator.classList.add('hidden')
+            })
+          })
+        } else {
+          const format = conversionType === 'pngToJpg' ? 'jpeg' : 'png'
+          const ext = conversionType === 'pngToJpg' ? 'jpg' : 'png'
+          convertImage(fileInput.files[0], format).then((dataURL) => {
+            const fileName = fileInput.files[0].name.replace(
+              /\.(jpg|jpeg|png)$/i,
+              `.${ext}`,
+            )
+            downloadSection.innerHTML = `<a href="${dataURL}" download="${fileName}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Download ${ext.toUpperCase()}</a>`
+            downloadSection.classList.remove('hidden')
+            loadingIndicator.classList.add('hidden')
+          })
+        }
+      })
+    </script>
+  </body>
+</html>
